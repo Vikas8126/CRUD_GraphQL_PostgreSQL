@@ -1,0 +1,31 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("CONNECTION_STR")
+}
+
+model movie {
+  id           Int      @id(map: "PK_cb3bb4d61cf764dc035cbedd422") @default(autoincrement())
+  name         String   @db.VarChar
+  description  String   @db.VarChar
+  directorName String   @db.VarChar
+  releaseDate  String   @db.VarChar
+  createdAt    DateTime @default(now()) @db.Timestamp(6)
+  updatedAt    DateTime @default(now()) @db.Timestamp(6)
+  creatorId    Int
+  image        String?  @db.VarChar
+  user         user     @relation(fields: [creatorId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_b55916de756e46290d52c70fc04")
+}
+
+model user {
+  id        Int      @id(map: "PK_cace4a159ff9f2512dd42373760") @default(autoincrement())
+  userName  String   @db.VarChar
+  password  String   @db.VarChar
+  email     String   @unique(map: "UQ_e12875dfb3b1d92d7d7c5377e22") @db.VarChar
+  createdAt DateTime @default(now()) @db.Timestamp(6)
+  updatedAt DateTime @default(now()) @db.Timestamp(6)
+  movie     movie[]
+}
