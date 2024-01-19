@@ -31,12 +31,11 @@ export const resolvers = {
         sort: { column: movieColoumn; order: sort };
         search: string;
       },
-      context: Context
+      _context: Context
     ) {
       try {
         const rows = args?.rows || 10;
         const page = args?.page || 0;
-        console.log(args, context);
         let db_query: Prisma.movieFindManyArgs = {
           skip: page * rows,
           take: rows,
@@ -76,14 +75,14 @@ export const resolvers = {
           //Counting the total number of rows
           where: db_query.where,
         });
-
         return {
           //Returning the movies and total rows
           movies,
           total_rows,
         };
       } catch (err) {
-        return err;
+        console.error(err);
+        throw err;
       }
     },
   },
@@ -102,7 +101,6 @@ export const resolvers = {
       context: Context
     ) {
       try {
-        console.log(context);
         const user_id = context?.userId; //Checking if the user is logged in and authenticated
         if (!user_id) {
           throw new Error("User is not logged in OR not authenticated");
@@ -191,12 +189,11 @@ export const resolvers = {
     async signupUser(
       _: any,
       args: { userName: string; email: string; password: string },
-      context: Context
+      _context: Context
     ) {
       try {
         const { userName, email, password } = args;
         const hashedPassword = await argon2.hash(password); //Hashing the password with argon2
-        console.log(context);
         const user = await dbClient.user.create({
           //Creating a new user in the database
           data: {
@@ -205,8 +202,6 @@ export const resolvers = {
             password: hashedPassword,
           },
         });
-        console.log(user);
-
         //Creating a jwt token for 24 hours
         const token = jwt.sign(
           { userId: user.id },
@@ -224,11 +219,10 @@ export const resolvers = {
     async loginUser(
       _: any,
       args: { email: string; password: string },
-      context: Context
+      _context: Context
     ) {
       try {
         const { email, password } = args;
-        console.log(context);
         const user = await dbClient.user.findUnique({ where: { email } });
         if (!user) {
           throw new Error("User not found");
@@ -261,7 +255,6 @@ export const resolvers = {
           throw new Error("User is not logged in OR not authenticated");
         }
         const { userId, oldPassword, newPassword } = args;
-        console.log(context);
         const user = await dbClient.user.findUnique({ where: { id: userId } }); // Find the user by ID
         if (!user) {
           throw new Error("User not found");
@@ -285,7 +278,6 @@ export const resolvers = {
           process.env.TOKEN_SECRET as jwt.Secret,
           { expiresIn: "1d" }
         );
-        console.log(updatedUser);
         return { user: updatedUser, token };
       } catch (err) {
         console.error(err);

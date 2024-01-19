@@ -45,12 +45,11 @@ var movieColoumn;
 })(movieColoumn || (movieColoumn = {}));
 exports.resolvers = {
     Query: {
-        async movies(_, args, context) {
+        async movies(_, args, _context) {
             var _a, _b;
             try {
                 const rows = (args === null || args === void 0 ? void 0 : args.rows) || 10;
                 const page = (args === null || args === void 0 ? void 0 : args.page) || 0;
-                console.log(args, context);
                 let db_query = {
                     skip: page * rows,
                     take: rows,
@@ -92,14 +91,14 @@ exports.resolvers = {
                 };
             }
             catch (err) {
-                return err;
+                console.error(err);
+                throw err;
             }
         },
     },
     Mutation: {
         async createMovie(_, args, context) {
             try {
-                console.log(context);
                 const user_id = context === null || context === void 0 ? void 0 : context.userId;
                 if (!user_id) {
                     throw new Error("User is not logged in OR not authenticated");
@@ -167,11 +166,10 @@ exports.resolvers = {
                 throw err;
             }
         },
-        async signupUser(_, args, context) {
+        async signupUser(_, args, _context) {
             try {
                 const { userName, email, password } = args;
                 const hashedPassword = await argon2_1.default.hash(password);
-                console.log(context);
                 const user = await prismaClient_1.default.user.create({
                     data: {
                         userName,
@@ -179,7 +177,6 @@ exports.resolvers = {
                         password: hashedPassword,
                     },
                 });
-                console.log(user);
                 const token = jwt.sign({ userId: user.id }, process.env.TOKEN_SECRET, { expiresIn: "1d" });
                 return { user, token };
             }
@@ -188,10 +185,9 @@ exports.resolvers = {
                 throw err;
             }
         },
-        async loginUser(_, args, context) {
+        async loginUser(_, args, _context) {
             try {
                 const { email, password } = args;
-                console.log(context);
                 const user = await prismaClient_1.default.user.findUnique({ where: { email } });
                 if (!user) {
                     throw new Error("User not found");
@@ -215,7 +211,6 @@ exports.resolvers = {
                     throw new Error("User is not logged in OR not authenticated");
                 }
                 const { userId, oldPassword, newPassword } = args;
-                console.log(context);
                 const user = await prismaClient_1.default.user.findUnique({ where: { id: userId } });
                 if (!user) {
                     throw new Error("User not found");
@@ -230,7 +225,6 @@ exports.resolvers = {
                     data: { password: hashedNewPassword },
                 });
                 const token = jwt.sign({ userId: updatedUser.id }, process.env.TOKEN_SECRET, { expiresIn: "1d" });
-                console.log(updatedUser);
                 return { user: updatedUser, token };
             }
             catch (err) {
